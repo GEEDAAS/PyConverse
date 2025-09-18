@@ -184,3 +184,13 @@ button {
 body .container {
     display: initial; /* Resetea el grid del contenedor anterior */
 }
+
+.typing-indicator {
+  height: 20px; /* Le da un espacio fijo para que el layout no salte */
+  padding: 0 10px 5px;
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+  visibility: hidden; /* Oculto por defecto */
+  transition: visibility 0.2s;
+}

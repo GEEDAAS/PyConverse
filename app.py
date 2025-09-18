@@ -97,6 +97,18 @@ def handle_chat_message(data):
 
     emit('chat_message', message_data, to=room)
 
+@socketio.on('typing')
+def handle_typing(data):
+    """Maneja el evento de 'escribiendo...'."""
+    username = session.get('username')
+    room = session.get('room')
+    if username and room:
+        # Reenvía el evento a todos en la sala, excepto al emisor original.
+        emit('user_typing', {
+            'username': username,
+            'is_typing': data.get('is_typing', False)
+        }, to=room, include_self=False)
+
 @socketio.on('disconnect')
 def handle_disconnect():
     username = session.get('username')

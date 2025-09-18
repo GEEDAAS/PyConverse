@@ -1,9 +1,4 @@
-// static/js/main.js
-
 document.addEventListener('DOMContentLoaded', () => {
-    // ---------------------------------------------------
-    // 1. CONEXIÓN E INICIALIZACIÓN
-    // ---------------------------------------------------
     const socket = io();
 
     // Elementos del DOM
@@ -15,16 +10,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
     const openBtn = document.getElementById('open-sidebar-btn');
     const closeBtn = document.getElementById('close-sidebar-btn');
-    
-    // Elementos y variables para el Typing Indicator
     const typingIndicator = document.getElementById('typing-indicator');
+
+    // Elementos de la Modal de Mensajes Privados
+    const pmModal = document.getElementById('conversation-modal');
+    const pmForm = document.getElementById('private-message-form');
+    const pmRecipientSpan = document.getElementById('pm-recipient');
+    const pmInput = document.getElementById('pm-input');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const pmMessagesList = document.getElementById('pm-messages');
+
+    let localUsername = document.body.dataset.username;
+    let currentPrivateChatUser = null;
     let typingTimer;
-    const TYPING_TIMER_LENGTH = 2000; // 2 segundos
+    const TYPING_TIMER_LENGTH = 2000;
     let usersTyping = {};
 
-    // ---------------------------------------------------
-    // 2. FUNCIONES AUXILIARES
-    // ---------------------------------------------------
+    // --- FUNCIONES AUXILIARES ---
 
     function appendSystemMessage(text) {
         const li = document.createElement('li');
@@ -33,31 +35,51 @@ document.addEventListener('DOMContentLoaded', () => {
         messagesList.appendChild(li);
         messagesList.scrollTop = messagesList.scrollHeight;
     }
-
-    function appendChatMessage(username, text) {
+    
+    function appendPublicMessage(data) {
+        const { username, msg } = data;
         const li = document.createElement('li');
         li.className = 'msg';
-        const u = document.createElement('span');
-        u.className = 'username';
-        u.textContent = username + ': ';
-        const t = document.createElement('span');
-        t.className = 'text';
-        t.textContent = text;
-        li.appendChild(u);
-        li.appendChild(t);
+        li.innerHTML = `<span class="username">${username}:</span> <span class="text">${msg}</span>`;
         messagesList.appendChild(li);
         messagesList.scrollTop = messagesList.scrollHeight;
     }
 
+    function appendPrivateMessage(data) {
+        const { id, sender, msg, seen } = data;
+        const li = document.createElement('li');
+        li.className = 'msg private';
+        li.dataset.id = id;
+
+        const direction = sender === localUsername ? 'Tú' : sender;
+        const seenStatus = sender === localUsername && seen ? ' (Visto)' : '';
+        
+        li.innerHTML = `
+            <div><span class="username">${direction}:</span> ${msg}</div>
+            <div class="meta"><span class="seen-status">${seenStatus}</span></div>
+        `;
+        pmMessagesList.appendChild(li);
+        pmMessagesList.scrollTop = pmMessagesList.scrollHeight;
+        
+        if (data.recipient === localUsername && !seen) {
+            socket.emit('message_seen', { id, sender });
+        }
+    }
+
     function updateUserList(users) {
-        if (!userList) return; // Salvaguarda por si el elemento no existe
-        userList.innerHTML = ''; // Limpiar la lista actual
+        userList.innerHTML = '';
         users.forEach(user => {
             const li = document.createElement('li');
-            li.textContent = user;
+            if (user === localUsername) {
+                li.innerHTML = `${user} (Tú)`;
+                li.style.color = 'var(--accent)';
+            } else {
+                li.innerHTML = `${user}<span class="notification-dot" id="notif-${user}"></span>`;
+                li.addEventListener('click', () => openPrivateMessageModal(user));
+            }
             userList.appendChild(li);
         });
-        userCount.textContent = users.length; // Actualizar el contador
+        userCount.textContent = users.length;
     }
 
     function updateTypingIndicator() {
@@ -68,21 +90,32 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (typingUsernames.length === 1) {
             typingIndicator.textContent = `${typingUsernames[0]} está escribiendo...`;
             typingIndicator.style.visibility = 'visible';
-        } else if (typingUsernames.length <= 3) {
-            typingIndicator.textContent = `${typingUsernames.join(', ')} están escribiendo...`;
-            typingIndicator.style.visibility = 'visible';
         } else {
             typingIndicator.textContent = 'Varios usuarios están escribiendo...';
             typingIndicator.style.visibility = 'visible';
         }
     }
 
-    // ---------------------------------------------------
-    // 3. MANEJADORES DE EVENTOS DE SOCKET.IO
-    // ---------------------------------------------------
+    function openPrivateMessageModal(recipientUsername) {
+        currentPrivateChatUser = recipientUsername;
+        pmRecipientSpan.textContent = recipientUsername;
+        pmMessagesList.innerHTML = '';
+        socket.emit('get_private_history', { 'with_user': recipientUsername });
+        const notifDot = document.getElementById(`notif-${recipientUsername}`);
+        if (notifDot) notifDot.style.display = 'none';
+        pmModal.style.display = 'flex';
+        pmInput.focus();
+    }
+    
+    function closePrivateMessageModal() {
+        pmModal.style.display = 'none';
+        pmInput.value = '';
+        currentPrivateChatUser = null;
+    }
 
+    // --- MANEJADORES DE EVENTOS DE SOCKET.IO ---
+    
     socket.on('connect', () => {
-        console.log('✅ Conectado al servidor');
         const room = document.body.dataset.room;
         if (room) {
             socket.emit('join', { room: room });
@@ -90,22 +123,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     socket.on('history', (data) => {
-        messagesList.innerHTML = ''; // Limpiar mensajes
-        data.messages.forEach(msg => {
-            appendChatMessage(msg.username, msg.msg);
-        });
+        messagesList.innerHTML = '';
+        data.messages.forEach(msg => appendPublicMessage(msg));
     });
 
-    socket.on('update_user_list', (data) => {
-        updateUserList(data.users);
+    socket.on('update_user_list', (data) => updateUserList(data.users));
+    socket.on('system', (data) => appendSystemMessage(data.msg));
+    socket.on('chat_message', (data) => appendPublicMessage(data));
+    
+    socket.on('private_message', (data) => {
+        const otherUser = data.sender === localUsername ? data.recipient : data.sender;
+        if (currentPrivateChatUser === otherUser) {
+            appendPrivateMessage(data);
+        } else {
+            if (data.recipient === localUsername) {
+                const notifDot = document.getElementById(`notif-${data.sender}`);
+                if (notifDot) notifDot.style.display = 'block';
+            }
+        }
     });
 
-    socket.on('system', (data) => {
-        appendSystemMessage(data.msg);
+    socket.on('private_history', (data) => {
+        if (data.with_user === currentPrivateChatUser) {
+            data.history.forEach(msg => appendPrivateMessage(msg));
+        }
     });
 
-    socket.on('chat_message', (data) => {
-        appendChatMessage(data.username, data.msg);
+    socket.on('update_seen_status', (data) => {
+        const msgElement = document.querySelector(`#pm-messages .msg[data-id="${data.id}"] .seen-status`);
+        if (msgElement) {
+            msgElement.textContent = ' (Visto)';
+        }
     });
     
     socket.on('user_typing', (data) => {
@@ -117,10 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTypingIndicator();
     });
     
-    // ---------------------------------------------------
-    // 4. MANEJADORES DE EVENTOS DEL USUARIO
-    // ---------------------------------------------------
-
+    // --- MANEJADORES DE EVENTOS DEL USUARIO ---
+    
     if (messageForm) {
         messageForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -129,7 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
             socket.emit('chat_message', { msg });
             messageInput.value = '';
             messageInput.focus();
-            // Notifica que ha dejado de escribir al enviar el mensaje
             clearTimeout(typingTimer);
             socket.emit('typing', { 'is_typing': false });
         });
@@ -139,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
         openBtn.addEventListener('click', () => {
             sidebar.classList.add('is-open');
         });
-
         closeBtn.addEventListener('click', () => {
             sidebar.classList.remove('is-open');
         });
@@ -149,10 +193,27 @@ document.addEventListener('DOMContentLoaded', () => {
         messageInput.addEventListener('input', () => {
             clearTimeout(typingTimer);
             socket.emit('typing', { 'is_typing': true });
-            
             typingTimer = setTimeout(() => {
                 socket.emit('typing', { 'is_typing': false });
             }, TYPING_TIMER_LENGTH);
         });
     }
+
+    if (pmForm) {
+        pmForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const msg = pmInput.value.trim();
+            if (!msg || !currentPrivateChatUser) return;
+            socket.emit('private_message', {
+                recipient_username: currentPrivateChatUser,
+                msg: msg
+            });
+            pmInput.value = '';
+        });
+    }
+
+    if (closeModalBtn) closeModalBtn.addEventListener('click', closePrivateMessageModal);
+    if (pmModal) pmModal.addEventListener('click', (e) => {
+        if (e.target === pmModal) closePrivateMessageModal();
+    });
 });

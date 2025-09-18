@@ -8,11 +8,12 @@
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" defer></script>
   <script src="/static/js/main.js" defer></script>
 </head>
-<body data-room="{{ room }}">
+<body data-room="{{ room }}" data-username="{{ username }}">
   <div class="chat-layout">
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <h3>Participantes (<span id="user-count">0</span>)</h3>
+        <button class="close-btn" id="close-sidebar-btn">&times;</button>
       </div>
       <ul id="user-list" class="user-list">
         </ul>
@@ -20,26 +21,52 @@
 
     <div class="main-content">
       <header class="header">
-        <h1>💬 Sala: {{ room }}</h1>
-        <div class="status">
+        <div class="header-group">
+          <button class="menu-btn" id="open-sidebar-btn">
+              <span></span>
+              <span></span>
+              <span></span>
+          </button>
+          <h1>💬 Sala: {{ room }}</h1>
+        </div>
+        
+        <div class="header-greeting">
           <span>¡Hola, {{ username }}!</span>
         </div>
+
         <div class="actions">
             <button onclick="window.location.href='{{ url_for('selector_de_salas') }}'" class="action-btn rooms-btn">Cambiar Sala</button>
             <button onclick="window.location.href='{{ url_for('logout') }}'" class="action-btn exit-btn">Salir</button>
         </div>
       </header>
-
+      
       <main class="chat" id="chat" aria-live="polite">
         <ul id="messages" class="messages"></ul>
       </main>
 
       <footer class="composer">
         <div id="typing-indicator" class="typing-indicator"></div>
-
         <form id="message-form">
           <input id="message" type="text" placeholder="Escribe un mensaje en #{{ room }}" autocomplete="off" required/>
           <button type="submit" id="send-btn">Enviar</button>
+        </form>
+      </footer>
+    </div>
+  </div>
+
+  <div id="conversation-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2>Chat con <span id="pm-recipient"></span></h2>
+        <button id="close-modal-btn" class="close-btn">&times;</button>
+      </header>
+      <main class="chat" id="pm-chat-main">
+        <ul id="pm-messages" class="messages"></ul>
+      </main>
+      <footer class="composer">
+        <form id="private-message-form">
+          <input id="pm-input" type="text" placeholder="Escribe un mensaje privado..." autocomplete="off" required/>
+          <button type="submit">Enviar</button>
         </form>
       </footer>
     </div>

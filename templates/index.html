@@ -12,13 +12,51 @@
             <h1>💬 Bienvenido al Chat en Tiempo Real</h1>
         </header>
         
-        <section class="username-section" id="username-section" style="padding: 40px 20px;">
-            <h2>Elige tu nombre de usuario para comenzar</h2>
-            <form id="username-form" action="/login" method="POST">
-                <input id="username" name="username" type="text" placeholder="Tu nombre de usuario" autocomplete="off" required />
-                <button type="submit">Entrar al Chat</button>
-            </form>
-        </section>
+        <main class="welcome-content">
+            <section class="username-section" id="username-section" style="padding: 40px 20px;">
+                <h2>Elige tu nombre de usuario para comenzar</h2>
+                <form id="username-form" action="/login" method="POST">
+                    <input id="username" name="username" type="text" placeholder="Tu nombre de usuario" autocomplete="off" required />
+                    <button type="submit">Entrar al Chat</button>
+                </form>
+            </section>
+
+            <section class="instructions-section">
+                <h2>¿Cómo se Usa?</h2>
+                <ul class="features-list">
+                    <li>
+                        <span class="feature-icon">🚪</span>
+                        <div class="feature-text">
+                            <strong>1. Elige una Sala:</strong> Después de iniciar sesión, podrás unirte a salas de chat existentes o crear la tuya.
+                        </div>
+                    </li>
+                    <li>
+                        <span class="feature-icon">💬</span>
+                        <div class="feature-text">
+                            <strong>2. Chatea en Tiempo Real:</strong> Envía mensajes públicos que todos en la sala pueden ver.
+                        </div>
+                    </li>
+                    <li>
+                        <span class="feature-icon">🤫</span>
+                        <div class="feature-text">
+                            <strong>3. Envía Mensajes Privados:</strong> Haz clic en el nombre de un participante para iniciar una conversación privada con confirmación de lectura.
+                        </div>
+                    </li>
+                    <li>
+                        <span class="feature-icon">⌨️</span>
+                        <div class="feature-text">
+                            <strong>4. Indicador de "Escribiendo":</strong> Sabrás en tiempo real cuando alguien está redactando un mensaje.
+                        </div>
+                    </li>
+                    <li>
+                        <span class="feature-icon">📱</span>
+                        <div class="feature-text">
+                            <strong>5. Diseño Responsivo:</strong> Disfruta de una experiencia perfecta en cualquier dispositivo, desde tu PC hasta tu celular.
+                        </div>
+                    </li>
+                </ul>
+            </section>
+        </main>
     </div>
 </body>
 </html>

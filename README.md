@@ -54,39 +54,76 @@ La aplicación se construyó utilizando un stack de tecnologías modernas y efic
 
 ---
 
-## 🔧 Cómo Ejecutar el Proyecto Localmente
+## 🔧 Guía de Despliegue y Uso Local
 
-Sigue estos pasos para poner en marcha el proyecto en tu máquina.
+Sigue esta guía detallada para configurar y ejecutar la aplicación en tu entorno local y permitir que otros se conecten a través de tu red.
 
-1.  **Clona el repositorio:**
+### **Paso 1: Obtener el Código Fuente**
+
+Primero, necesitas una copia local del proyecto. Clona el repositorio usando Git:
+
     ```bash
-    git clone [https://github.com/TU_USUARIO/PyConverse.git]
+    git clone [https://github.com/GEEDAAS/PyConverse.git](https://github.com/GEEDAAS/PyConverse.git)
     cd PyConverse
     ```
+### **Paso 2: Configurar el Entorno Virtual y Activacion**
 
-2.  **Crea y activa un entorno virtual:**
+Es una buena práctica profesional aislar las dependencias del proyecto en un entorno virtual.
+
     ```bash
     # Windows
-    python -m venv venv
-    .\.venv\Scripts\activate
+    python -m venv .venv
+    .\.venv\Scripts\Activate
 
     # macOS / Linux
-    python3 -m venv venv
-    source venv/bin/activate
+    python3 -m venv .venv
+    source .venv\bin\Activate
     ```
+Veras (.venv) al principio de la linea de tu terminal si se activó correctamente.
 
-3.  **Instala las dependencias:**
-    *(Asegúrate de tener un archivo `requirements.txt` en tu repositorio)*
+### **Paso 3: Instalar las Dependencias**
+
+Asegurate de tener un archivo **requirements.txt** en la carpeta del proyecto con el siguiente contenido:
+- Flask
+- Flask-SocketIO
+- python-engineio
+- python-socketio
+- Werkzeug
+
+Luego instala las librerias con un solo comando:
+
     ```bash
     pip install -r requirements.txt
     ```
 
-4.  **Ejecuta la aplicación:**
+### **Paso 4: Iniciar el Sevridor del Chat**
+
+Ejecuta el script prinicpal de la aplicación. El servidor se iniciara y estara listo para aceptar conexiones.
+
     ```bash
     python app.py
     ```
 
-5.  Abre tu navegador y ve a `http://127.0.0.1:5000`.
+La terminarl te msotrara que el servidor esta corriendo en **http://0.0.0.0:5000**, lo que significa que es accesible desde otras computadoras en tu red.
+
+### **Paso 5: Conectarse al Chat**
+
+- Para conectarse desde la misma computadora (el "servdiro"), abre tu navegador web y ve a la direccion **http://0.0.0.0:5000** o **http://127.0.0.1:5000**.
+
+- Para que otras computadoras se conecten (los "clientes"), deven estar **comecyadas a la misma red Wi-Fi o Ethernet** que la computadora servidor, como tambien se nececita encontrar la **dirección IP local** de la computadora servidor. Para ello, abra una terminal en la computadora servidor y escribe:
+
+    ```bash
+    # Windows / macOS / Linux
+    ipconfig
+    ```
+
+- Busca la direccion **IPv4 Addres (Direccion IPv4)**.
+
+- En las otras computadoras, abre el navegador web y ve a la direccion ip del servidor seguida del puerto **:5000**
+
+    ```bash
+    http://LA_IP:5000
+    ```
 
 ---
 

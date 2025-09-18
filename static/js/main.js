@@ -2,14 +2,11 @@
 const socket = io();
 
 // Elementos del DOM
-const usernameSection = document.getElementById('username-section');
-const usernameForm = document.getElementById('username-form');
-const usernameInput = document.getElementById('username');
 const messagesList = document.getElementById('messages');
 const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message');
-const sendBtn = document.getElementById('send-btn');
-const participantsSpan = document.getElementById('participants');
+const userList = document.getElementById('user-list'); // Nuevo
+const userCount = document.getElementById('user-count'); // Nuevo
 
 // Helpers
 function appendSystemMessage(text) {
@@ -35,31 +32,47 @@ function appendChatMessage(username, text) {
   messagesList.scrollTop = messagesList.scrollHeight;
 }
 
+// NUEVA FUNCIÓN: Actualizar la lista de usuarios en la barra lateral
+function updateUserList(users) {
+  userList.innerHTML = ''; // Limpiar la lista actual
+  users.forEach(user => {
+    const li = document.createElement('li');
+    li.textContent = user;
+    userList.appendChild(li);
+  });
+  userCount.textContent = users.length; // Actualizar el contador
+}
+
 // Eventos de Socket
+
+// AHORA LO MÁS IMPORTANTE:
+// Cuando el socket se conecta, le decimos al servidor a qué sala nos queremos unir.
+socket.on('connect', () => {
+    const room = document.body.dataset.room; // Leemos el nombre de la sala desde el atributo data-room
+    if (room) {
+        socket.emit('join', { room: room });
+    }
+});
+
+// NUEVO EVENTO: Recibir el historial de mensajes al unirse
+socket.on('history', (data) => {
+  messagesList.innerHTML = ''; // Limpiar mensajes de bienvenida
+  data.messages.forEach(msg => {
+    appendChatMessage(msg.username, msg.msg);
+  });
+});
+
+// NUEVO EVENTO: Recibir la lista de usuarios actualizada
+socket.on('update_user_list', (data) => {
+  updateUserList(data.users);
+});
+
 socket.on('system', (data) => {
   appendSystemMessage(data.msg);
 });
 
 socket.on('chat_message', (data) => {
   appendChatMessage(data.username, data.msg);
-});
-
-socket.on('participants', (data) => {
-  participantsSpan.textContent = data.count;
-});
-
-// Enviar username
-usernameForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const name = usernameInput.value.trim();
-  if (!name) return;
-  socket.emit('set_username', { username: name });
-  // Deshabilitar el formulario de username y habilitar el chat
-  usernameInput.disabled = true;
-  usernameSection.style.display = 'none';
-  messageInput.disabled = false;
-  sendBtn.disabled = false;
-  messageInput.focus();
 });
 
 // Enviar mensajes
@@ -70,12 +83,4 @@ messageForm.addEventListener('submit', (e) => {
   socket.emit('chat_message', { msg });
   messageInput.value = '';
   messageInput.focus();
-});
-
-// Botón salir del chat
-const exitBtn = document.getElementById("exit-btn");
-
-exitBtn.addEventListener("click", () => {
-  socket.disconnect(); // Cierra la conexión con el servidor
-  window.location.href = "/"; // Redirige al inicio (puedes cambiar la ruta si quieres otra página)
 });

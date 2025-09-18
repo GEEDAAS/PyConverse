@@ -1,52 +1,120 @@
-from flask import Flask, render_template, request
-from flask_socketio import SocketIO, emit
+# app.py
+from flask import Flask, render_template, request, redirect, url_for, session
+from flask_socketio import SocketIO, emit, join_room, leave_room
+from collections import defaultdict
 import os
 
-# Flask básico
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+socketio = SocketIO(app)
 
-# Inicializar SocketIO (eventlet recomendado para WebSockets reales)
-socketio = SocketIO(app, cors_allowed_origins="*")
+# --- Almacenamiento en Memoria ---
+# Usamos defaultdict para que al acceder a una sala nueva, se cree una lista vacía automáticamente.
+room_history = defaultdict(list)
+room_users = defaultdict(set)
+active_rooms = {"General", "Juegos", "Tareas"}
 
-# Mapa de usuarios conectados: sid -> username
-users = {}
+# --- Rutas HTTP ---
 
 @app.route('/')
-def index():
+def inicio():
     return render_template('index.html')
 
-@socketio.on('connect')
-def handle_connect():
-    # Al conectarse, solo avisamos al cliente y mandamos el conteo actual
-    emit('system', {'msg': 'Conectado al servidor. Ingresa tu usuario para empezar.'})
-    emit('participants', {'count': len(users)})
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form.get('username', '').strip()
+    if username:
+        session['username'] = username
+        return redirect(url_for('selector_de_salas'))
+    return redirect(url_for('inicio'))
 
-@socketio.on('set_username')
-def handle_set_username(data):
-    username = (data.get('username') or '').strip()
-    if not username:
-        username = f'Usuario_{request.sid[:5]}'
-    users[request.sid] = username
-    emit('system', {'msg': f'{username} se unió al chat.'}, broadcast=True)
-    emit('participants', {'count': len(users)}, broadcast=True)
+# NUEVA RUTA: Botón para salir completamente
+@app.route('/logout')
+def logout():
+    """Limpia la sesión del usuario y lo redirige al inicio."""
+    session.clear()
+    return redirect(url_for('inicio'))
+
+@app.route('/salas')
+def selector_de_salas():
+    if 'username' not in session:
+        return redirect(url_for('inicio'))
+    return render_template('salas.html', rooms=sorted(list(active_rooms)))
+
+@app.route('/chat/<string:room_name>')
+def chat(room_name):
+    if 'username' not in session:
+        return redirect(url_for('inicio'))
+    active_rooms.add(room_name)
+    return render_template('chat.html', username=session['username'], room=room_name)
+
+# --- Funciones Auxiliares ---
+def update_user_list(room):
+    """Función para emitir la lista de usuarios actualizada a una sala."""
+    if room in room_users:
+        users_list = sorted(list(room_users[room]))
+        emit('update_user_list', {'users': users_list}, to=room)
+
+# --- Eventos de Socket.IO ---
+
+@socketio.on('join')
+def on_join(data):
+    username = session['username']
+    room = data['room']
+    session['room'] = room
+    join_room(room)
+
+    # Añadir usuario a la lista de la sala
+    room_users[room].add(username)
+    
+    print(f'{username} se ha unido a la sala: {room}')
+    
+    # 1. Enviar historial de mensajes al usuario que acaba de unirse
+    emit('history', {'messages': room_history[room]})
+    
+    # 2. Notificar a todos en la sala que un nuevo usuario ha entrado
+    emit('system', {'msg': f'{username} se unió al chat.'}, to=room)
+    
+    # 3. Actualizar la lista de participantes para todos en la sala
+    update_user_list(room)
 
 @socketio.on('chat_message')
 def handle_chat_message(data):
-    msg = (data.get('msg') or '').strip()
-    if not msg:
-        return  # ignorar mensajes vacíos
-    username = users.get(request.sid, f'Usuario_{request.sid[:5]}')
-    # Reenviar a todos los clientes (broadcast)
-    emit('chat_message', {'username': username, 'msg': msg}, broadcast=True)
+    username = session.get('username', 'Anónimo')
+    room = session.get('room')
+    msg = data.get('msg', '').strip()
+
+    if not msg or not room:
+        return
+
+    message_data = {'username': username, 'msg': msg}
+    
+    # Guardar mensaje en el historial de la sala
+    room_history[room].append(message_data)
+    # Opcional: Limitar el historial para no consumir mucha memoria
+    if len(room_history[room]) > 100:
+        room_history[room].pop(0)
+
+    emit('chat_message', message_data, to=room)
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    username = users.pop(request.sid, None)
-    if username:
-        emit('system', {'msg': f'{username} salió del chat.'}, broadcast=True)
-    emit('participants', {'count': len(users)}, broadcast=True)
+    username = session.get('username')
+    room = session.get('room')
+    
+    if username and room and username in room_users.get(room, set()):
+        leave_room(room)
+        room_users[room].remove(username)
+        
+        # Si la sala queda vacía, se puede eliminar la sala y su historial (opcional)
+        if not room_users[room]:
+            room_users.pop(room)
+            room_history.pop(room)
+            # No eliminamos de active_rooms para que siga apareciendo en la lista
+            
+        print(f'{username} se ha desconectado de la sala {room}')
+        emit('system', {'msg': f'{username} salió del chat.'}, to=room)
+        update_user_list(room)
 
 if __name__ == '__main__':
-    # host=0.0.0.0 para permitir acceso desde otras PCs de la red
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)

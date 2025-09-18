@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat: {{ room }}</title>
+  <link rel="stylesheet" href="/static/css/styles.css"/>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" defer></script>
+  <script src="/static/js/main.js" defer></script>
+</head>
+<body data-room="{{ room }}">
+  <div class="chat-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h3>Participantes (<span id="user-count">0</span>)</h3>
+      </div>
+      <ul id="user-list" class="user-list">
+        </ul>
+    </aside>
+
+    <div class="main-content">
+      <header class="header">
+        <h1>💬 Sala: {{ room }}</h1>
+        <div class="status">
+          <span>¡Hola, {{ username }}!</span>
+        </div>
+        <div class="actions">
+            <button onclick="window.location.href='{{ url_for('selector_de_salas') }}'" class="action-btn rooms-btn">Cambiar Sala</button>
+            <button onclick="window.location.href='{{ url_for('logout') }}'" class="action-btn exit-btn">Salir</button>
+        </div>
+      </header>
+
+      <main class="chat" id="chat" aria-live="polite">
+        <ul id="messages" class="messages"></ul>
+      </main>
+
+      <footer class="composer">
+        <form id="message-form">
+          <input id="message" type="text" placeholder="Escribe un mensaje en #{{ room }}" autocomplete="off" required/>
+          <button type="submit" id="send-btn">Enviar</button>
+        </form>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

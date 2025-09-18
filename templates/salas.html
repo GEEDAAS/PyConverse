@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Seleccionar Sala de Chat</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <style>
+        .rooms-container { padding: 40px 20px; text-align: center; }
+        .room-list { list-style: none; padding: 0; margin: 20px 0; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;}
+        .room-list a { text-decoration: none; color: var(--text); background: var(--panel); padding: 15px 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); transition: transform 0.2s, background 0.2s;}
+        .room-list a:hover { background: var(--accent); color: var(--bg); transform: translateY(-3px); }
+        .create-room-form { margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container" style="grid-template-rows: auto 1fr;">
+        <header class="header">
+            <h1>💬 Elige o Crea una Sala</h1>
+        </header>
+
+        <main class="rooms-container">
+            <h2>Salas Disponibles</h2>
+            <ul class="room-list">
+                {% for room in rooms %}
+                    <li><a href="/chat/{{ room }}">{{ room }}</a></li>
+                {% endfor %}
+            </ul>
+
+            <hr style="border-color: rgba(255,255,255,0.1); margin: 30px 0;">
+
+            <h2>Crear una Nueva Sala</h2>
+            <form class="create-room-form" onsubmit="window.location.href='/chat/' + document.getElementById('room_name').value; return false;">
+                <input id="room_name" type="text" placeholder="Nombre de la nueva sala" required>
+                <button type="submit">Crear y Unirse</button>
+            </form>
+        </main>
+    </div>
+</body>
+</html>

@@ -31,10 +31,10 @@ Este proyecto no es solo un chat simple, sino una plataforma de comunicación co
 
 Este proyecto fue desarrollado por un equipo de estudiantes de **Ingeniería en Sistemas Computacionales**:
 
--   **Gerardo Guerrero**
--   **Maribel Garcia**
--   **Alan Hinojosa**
--   **Carlos Aguilar**
+-   **Gerardo Jorge Guerrero Frausto**
+-   **Maribel Garcia Mora**
+-   **Alan Leone Orlando Hinojosa Gonzalez**
+-   **Carlos Antonio Aguilar Bueno**
 
 ---
 

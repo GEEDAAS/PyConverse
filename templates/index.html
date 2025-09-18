@@ -1,42 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chat en tiempo real</title>
-  <link rel="stylesheet" href="/static/css/styles.css"/>
-  <!-- Cliente de Socket.IO -->
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" defer></script>
-  <script src="/static/js/main.js" defer></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bienvenido al Chat</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
 </head>
 <body>
-  <div class="container">
-    <header class="header">
-      <h1>💬 Chat en tiempo real</h1>
-      <div class="status">
-        <span id="participants">0</span> conectados
-      </div>
-      <!-- Botón de salir -->
-      <button id="exit-btn" class="exit-btn">Salir</button>
-    </header>
-
-    <section class="username-section" id="username-section">
-      <form id="username-form">
-        <input id="username" type="text" placeholder="Tu nombre de usuario" autocomplete="off" required/>
-        <button type="submit">Entrar</button>
-      </form>
-    </section>
-
-    <main class="chat" id="chat" aria-live="polite">
-      <ul id="messages" class="messages"></ul>
-    </main>
-
-    <footer class="composer">
-      <form id="message-form">
-        <input id="message" type="text" placeholder="Escribe un mensaje" autocomplete="off" disabled required/>
-        <button type="submit" id="send-btn" disabled>Enviar</button>
-      </form>
-    </footer>
-  </div>
+    <div class="container" style="grid-template-rows: auto 1fr;">
+        <header class="header">
+            <h1>💬 Bienvenido al Chat en Tiempo Real</h1>
+        </header>
+        
+        <section class="username-section" id="username-section" style="padding: 40px 20px;">
+            <h2>Elige tu nombre de usuario para comenzar</h2>
+            <form id="username-form" action="/login" method="POST">
+                <input id="username" name="username" type="text" placeholder="Tu nombre de usuario" autocomplete="off" required />
+                <button type="submit">Entrar al Chat</button>
+            </form>
+        </section>
+    </div>
 </body>
 </html>

@@ -62,15 +62,15 @@ Sigue esta guía detallada para configurar y ejecutar la aplicación en tu entor
 
 Primero, necesitas una copia local del proyecto. Clona el repositorio usando Git:
 
-    ```bash
+```bash
     git clone [https://github.com/GEEDAAS/PyConverse.git](https://github.com/GEEDAAS/PyConverse.git)
     cd PyConverse
-    ```
+```
 ### **Paso 2: Configurar el Entorno Virtual y Activacion**
 
 Es una buena práctica profesional aislar las dependencias del proyecto en un entorno virtual.
 
-    ```bash
+```bash
     # Windows
     python -m venv .venv
     .\.venv\Scripts\Activate
@@ -78,7 +78,7 @@ Es una buena práctica profesional aislar las dependencias del proyecto en un en
     # macOS / Linux
     python3 -m venv .venv
     source .venv\bin\Activate
-    ```
+```
 Veras (.venv) al principio de la linea de tu terminal si se activó correctamente.
 
 ### **Paso 3: Instalar las Dependencias**

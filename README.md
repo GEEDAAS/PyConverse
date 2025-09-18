@@ -92,17 +92,17 @@ Asegurate de tener un archivo **requirements.txt** en la carpeta del proyecto co
 
 Luego instala las librerias con un solo comando:
 
-    ```bash
+```bash
     pip install -r requirements.txt
-    ```
+```
 
 ### **Paso 4: Iniciar el Sevridor del Chat**
 
 Ejecuta el script prinicpal de la aplicación. El servidor se iniciara y estara listo para aceptar conexiones.
 
-    ```bash
+```bash
     python app.py
-    ```
+```
 
 La terminarl te msotrara que el servidor esta corriendo en **http://0.0.0.0:5000**, lo que significa que es accesible desde otras computadoras en tu red.
 
